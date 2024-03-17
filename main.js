@@ -14,16 +14,41 @@ function generatePrivateKeyFromText(text) {
 }
 
 // Función para convertir la clave privada a formato WIF
-function privateKeyToWIF(privateKey) {
-    const versionByte = '80'; // Versión principal de la red de Bitcoin para claves privadas
-    const privateKeyWithVersion = versionByte + privateKey;
-    const firstSha256 = crypto.createHash('sha256').update(Buffer.from(privateKeyWithVersion, 'hex')).digest();
-    const secondSha256 = crypto.createHash('sha256').update(firstSha256).digest();
-    const checksum = secondSha256.slice(0, 4).toString('hex');
-    const privateKeyWIFBuffer = Buffer.from(privateKeyWithVersion + checksum, 'hex');
-    const privateKeyWIF = bs58.encode(privateKeyWIFBuffer);
-    return privateKeyWIF;
-}
+// function privateKeyToWIF(privateKey) {
+//     const versionByte = '80'; // Versión principal de la red de Bitcoin para claves privadas
+//     const privateKeyWithVersion = versionByte + privateKey;
+//     const firstSha256 = crypto.createHash('sha256').update(Buffer.from(privateKeyWithVersion, 'hex')).digest();
+//     const secondSha256 = crypto.createHash('sha256').update(firstSha256).digest();
+//     const checksum = secondSha256.slice(0, 4).toString('hex');
+//     const privateKeyWIFBuffer = Buffer.from(privateKeyWithVersion + checksum, 'hex');
+//     const privateKeyWIF = bs58.encode(privateKeyWIFBuffer);
+//     return privateKeyWIF;
+// }
+function privateKeyToWIF(privateKeyHex) {
+    // Agrega el byte de versión para la red principal de Bitcoin (mainnet)
+    const privateKeyWithVersion = '80' + privateKeyHex;
+  
+    // Calcula el checksum de los primeros 33 bytes (versión + clave privada)
+    const hash1 = crypto
+      .createHash('sha256')
+      .update(Buffer.from(privateKeyWithVersion, 'hex'))
+      .digest();
+  
+    const hash2 = crypto
+      .createHash('sha256')
+      .update(hash1)
+      .digest();
+  
+    const checksum = hash2.slice(0, 4);
+  
+    // Concatena la clave privada con el checksum
+    const privateKeyWithChecksum = privateKeyWithVersion + checksum.toString('hex');
+  
+    // Convierte la clave privada con checksum a formato base58 (WIF)
+    const wif = bs58.encode(Buffer.from(privateKeyWithChecksum, 'hex'));
+  
+    return wif;
+  }
 
 const main = (semilla) => {
     // Paso 1: Generar una clave privada aleatoria
@@ -58,7 +83,7 @@ const rl = readline.createInterface({
 // Pregunta al usuario
 rl.question('ingresa semilla: ', (respuesta) => {
   console.log(`semilla: ${respuesta}`);
-  main(respuesta);
+  main('hola que hace');
   
 });
 
